@@ -1,0 +1,4 @@
+train: /content/drive/MyDrive/train_all_objs_enhanced/images
+val: /content/drive/MyDrive/train_all_objs_enhanced/images
+nc: 10
+names: ['object_0', 'object_1', 'object_4', 'object_8', 'object_10', 'object_11', 'object_14', 'object_18', 'object_19', 'object_20']

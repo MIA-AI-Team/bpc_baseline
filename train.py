@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import torch
 import argparse
 
-def train_yolo11(data_path, epochs, imgsz, batch, resume=False, checkpoint_path=None):
+def train_yolo11(data_path, epochs, imgsz, batch, resume=True, checkpoint_path=None):
     """
     Train YOLO11 for segmentation with multiple object classes.
 
@@ -26,6 +26,9 @@ def train_yolo11(data_path, epochs, imgsz, batch, resume=False, checkpoint_path=
     if not os.path.exists(data_path):
         print(f"Error: Dataset YAML file not found at {data_path}")
         return None
+    
+    save_dir = os.path.join("bpc", "yolo", "models", "segmentation", "multi_obj")
+    os.makedirs(save_dir, exist_ok=True)
 
     # Load model
     if resume and checkpoint_path and os.path.exists(checkpoint_path):
@@ -46,17 +49,22 @@ def train_yolo11(data_path, epochs, imgsz, batch, resume=False, checkpoint_path=
         device=device,
         workers=8,
         save=True,
+        save_period=1,
+        project=save_dir,
+        name="yolo11_seg_run",
+        resume=resume 
     )
 
     # Save model
-    save_dir = os.path.join("bpc", "yolo", "models", "segmentation", "multi_obj")
-    os.makedirs(save_dir, exist_ok=True)
-    model_name = "yolo11-segmentation-multi_obj.pt"
-    final_model_path = os.path.join(save_dir, model_name)
-    model.save(final_model_path)
+    run_dir = os.path.join(save_dir, "yolo11_seg_run")
+    last_model_path = os.path.join(run_dir, "weights", "last.pt")
+    best_model_path = os.path.join(run_dir, "weights", "best.pt")
 
-    print(f"Model saved as: {final_model_path}")
-    return final_model_path
+    print(f"Training completed.")
+    print(f"Last model saved to: {last_model_path}")
+    print(f"Best model saved to: {best_model_path}")
+
+    return best_model_path
 
 def main():
     parser = argparse.ArgumentParser(description="Train YOLO11 for segmentation.")
