@@ -151,20 +151,23 @@ def main():
                         help="Path to the train_pbr dataset (e.g. .../ipd_bop_data_jan25_1/train_pbr).")
     parser.add_argument("--output_path", type=str, required=True,
                         help="Output path for YOLO dataset (e.g. .../datasets/yolo11/ipd_bop_data_jan25_1_obj_11).")
-    parser.add_argument("--obj_id", type=int, required=True,
-                        help="Object ID to filter for (e.g. 11).")
+    # parser.add_argument("--obj_id", type=int, required=True,
+    #                     help="Object ID to filter for (e.g. 11).")
 
     args = parser.parse_args()
 
     dataset_path = args.dataset_path
     output_path  = args.output_path
-    obj_id       = args.obj_id
+    # obj_id       = args.obj_id
 
-    # 1) Prepare YOLO images + labels
-    prepare_train_pbr(dataset_path, output_path, obj_id)
+    obj_ids = [0, 1, 4, 8, 10, 11, 14, 18, 19, 20]
 
-    # 2) Generate .yaml file for YOLO
-    generate_yaml(output_path, obj_id)
+    for obj_id in obj_ids:
+      # 1) Prepare YOLO images + labels
+      prepare_train_pbr(dataset_path, output_path, str(obj_id))
+
+      # 2) Generate .yaml file for YOLO
+      generate_yaml(output_path, obj_id)
 
     print("[INFO] Dataset preparation complete!")
 
