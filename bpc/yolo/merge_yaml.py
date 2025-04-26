@@ -57,11 +57,11 @@ def parse_args():
         description="Merge multiple per-object YOLO .yaml specs into one dataset.yaml"
     )
     parser.add_argument(
-        "yaml_dir",
+        "--yaml_dir",
         help="Directory containing one .yaml file per object"
     )
     parser.add_argument(
-        "out_yaml",
+        "--out_yaml",
         help="Output path for the merged dataset YAML"
     )
     return parser.parse_args()

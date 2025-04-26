@@ -160,11 +160,12 @@ def main():
     output_path  = args.output_path
     # obj_id       = args.obj_id
 
-    obj_ids = [0, 1, 4, 8, 10, 11, 14, 18, 19, 20]
+    # done 0,  1, 4
+    obj_ids = [8, 10, 11, 14, 18, 19, 20]
 
     for obj_id in obj_ids:
       # 1) Prepare YOLO images + labels
-      prepare_train_pbr(dataset_path, output_path, str(obj_id))
+      prepare_train_pbr(dataset_path, output_path, obj_id)
 
       # 2) Generate .yaml file for YOLO
       generate_yaml(output_path, obj_id)

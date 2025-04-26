@@ -1,4 +1,0 @@
-train: /content/drive/MyDrive/bpc_opencv_dataset/ipd/Yolo/images
-val: /content/drive/MyDrive/bpc_opencv_dataset/ipd/Yolo/images
-nc: 1
-names: ['object_11']
