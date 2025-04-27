@@ -1,104 +1,59 @@
 import os
-from ultralytics import YOLO
 import torch
-import argparse
+from ultralytics import YOLO
 
-def train_yolo11(task, data_path, obj_id, epochs, imgsz, batch):
-    """
-    Train YOLO11 for a specific task ("detection" or "segmentation")
-    using Ultralytics YOLO with a single object class.
+def train_multi_class_yolo(
+    yaml_path: str,
+    task: str = "detection",      # or "segmentation"
+    epochs: int = 300,
+    imgsz: int = 640,
+    batch: int = 16,
+    drive_project: str = "/content/drive/MyDrive/bpc_opencv_dataset/ipd/Yolo/runs",
+    run_name:    str = "yolo11-detection-multi"
+):
+    device = "cuda" if torch.cuda.is_available() else \
+             "mps"  if torch.backends.mps.is_available() else "cpu"
+    print(f"Using device: {device}")
 
-    Args:
-        task (str): "detection" or "segmentation"
-        data_path (str): Path to the YOLO .yaml file (e.g. data_obj_11.yaml).
-        obj_id (int): The BOP object ID (e.g. 11).
-        epochs (int): Number of training epochs.
-        imgsz (int): Image size used for training.
-        batch (int): Batch size.
+    weights = "yolo11m.pt" if task == "detection" else "yolo11m-seg.pt"
+    print(f"Loading pretrained weights: {weights}")
+    os.makedirs(drive_project, exist_ok=True)
 
-    Returns:
-        final_model_path (str): Path where the trained model is saved.
-    """
-
-    # Decide the device automatically: MPS (Apple), CUDA, or CPU
-    if torch.backends.mps.is_available():
-        device = torch.device("mps")
-    elif torch.cuda.is_available():
-        device = torch.device("cuda")
-    else:
-        device = torch.device("cpu")
-
-    # Pick the pre-trained model file based on task
-    if task == "detection":
-        pretrained_weights = "yolo11n.pt"
-        task_suffix = "detection"
-    elif task == "segmentation":
-        pretrained_weights = "yolo11n-seg.pt"
-        task_suffix = "segmentation"
-    else:
-        print("Invalid task. Must be 'detection' or 'segmentation'.")
-        return None
-
-    # Check if the dataset YAML file exists
-    if not os.path.exists(data_path):
-        print(f"Error: Dataset YAML file not found at {data_path}")
-        return None
-
-    # Load the YOLO model
-    print(f"Loading model {pretrained_weights} for {task_suffix} ...")
-    model = YOLO(pretrained_weights)
-
-    # Train the model
-    print(f"Training YOLO11 for {task_suffix} on object {obj_id} using {device}...")
+    model = YOLO(weights)
     model.train(
-        data=data_path,
+        data=yaml_path,
         epochs=epochs,
         imgsz=imgsz,
         batch=batch,
         device=device,
-        workers=8,  # more workers, train faster, adjust based on device
-        save=True,  # This creates a 'runs/train/...' folder but we'll still save final .pt ourselves
+        workers=8,
+        project=drive_project,   
+        name=run_name,           
+        exist_ok=True,           
     )
 
-    # ----------------------------------------------------------------------------
-    # Force the final save to your desired path:
-    #   idp_codebase/yolo/models/<detection or segmentation>/obj_<obj_id>/yolo11-<task_suffix>-obj_<obj_id>.pt
-    # ----------------------------------------------------------------------------
-    save_dir = os.path.join("bpc","yolo", "models", task_suffix, f"obj_{obj_id}")
-    os.makedirs(save_dir, exist_ok=True)
+    run_dir      = os.path.join(drive_project, run_name)
+    last_ckpt    = os.path.join(run_dir, "weights", "last.pt")
+    best_ckpt    = os.path.join(run_dir, "weights", "best.pt")
+    metrics_csv  = os.path.join(run_dir, "metrics.csv")
+    results_png  = os.path.join(run_dir, "results.png")
 
-    model_name = f"yolo11-{task_suffix}-obj_{obj_id}.pt"
-    final_model_path = os.path.join(save_dir, model_name)
+    print(f"\n All logs & checkpoints saved under:\n   {run_dir}")
+    print(f"   • last.pt: {last_ckpt}")
+    print(f"   • best.pt: {best_ckpt}")
+    print(f"   • metrics: {metrics_csv}")
+    print(f"   • plots:   {results_png}")
 
-    # Save final model
-    model.save(final_model_path)
-
-    print(f"Model saved as: {final_model_path}")
-    return final_model_path
-
-
-def main():
-    parser = argparse.ArgumentParser(description="Train YOLO11 on a specific dataset and object.")
-    parser.add_argument("--obj_id", type=int, required=True, help="Object ID for training (e.g., 11).")
-    parser.add_argument("--data_path", type=str, required=True, 
-                        help="Path to the dataset YAML file (e.g. idp_codebase/yolo/configs/data_obj_11.yaml).")
-    parser.add_argument("--epochs", type=int, default=300, help="Number of training epochs.")
-    parser.add_argument("--imgsz", type=int, default=640, help="Input image size.")
-    parser.add_argument("--batch", type=int, default=16, help="Batch size for training.")
-    parser.add_argument("--task", type=str, choices=["detection", "segmentation"], default="detection",
-                        help="Task type (detection or segmentation).")
-
-    args = parser.parse_args()
-
-    train_yolo11(
-        task=args.task,
-        data_path=args.data_path,
-        obj_id=args.obj_id,
-        epochs=args.epochs,
-        imgsz=args.imgsz,
-        batch=args.batch
-    )
-
+    return last_ckpt
 
 if __name__ == "__main__":
-    main()
+
+    train_multi_class_yolo(
+        yaml_path    = "/content/drive/MyDrive/bpc_opencv_dataset/ipd/Yolo/data_multi.yaml",
+        task         = "detection",
+        epochs       = 200,
+        imgsz        = 640,
+        batch        = 64,
+        drive_project= "/content/drive/MyDrive/bpc_opencv_dataset/ipd/Yolo/runs",
+        run_name     = "yolo11-detection-multi"
+    )
